@@ -1,10 +1,27 @@
-CPP = g++ -Wall 
+CPP = g++ -Wall -pg
 SRCS = main.cpp fluid_solver.cpp EventManager.cpp
+BIN_DIR = ./bin
+RESULTS_DIR = ./testResults
+BIN = $(BIN_DIR)/fluid_sim.bin
+INPUT_FILE = events.txt
 
-all:
-	$(CPP) $(SRCS) -o fluid_sim
+all: $(BIN)
+
+$(BIN): $(SRCS)
+	$(CPP) $(SRCS) -o $(BIN)
+
+setup:
+	@echo Setting Up...
+	mkdir -p $(BIN_DIR)
+	mkdir -p $(RESULTS_DIR)
+
+test: all
+	@echo Running Tests...
+	@$(BIN) < $(INPUT_FILE)
+	@gprof $(BIN) gmon.out > $(RESULTS_DIR)/analysis.txt
+	@less $(RESULTS_DIR)/analysis.txt
 
 clean:
 	@echo Cleaning up...
-	@rm fluid
+	rm -f $(BIN) gmon.out
 	@echo Done.
