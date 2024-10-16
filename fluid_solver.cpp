@@ -23,8 +23,11 @@ void add_source(int M, int N, int O, float *x, float *s, float dt) {
     }
 }
 
+// Dei inline a esta funcao pq estamos a dar 13400 calls no ciclo da lin_solve e
+// a encher a stack de lixo
+
 // Set boundary conditions
-void set_bnd(int M, int N, int O, int b, float *x) {
+inline void set_bnd(int M, int N, int O, int b, float *x) {
     int i, j;
 
     // TODO: Ver se existe dependencia de dados e se e possivel combinar tudo no
