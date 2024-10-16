@@ -66,19 +66,20 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
 // Linear solve for implicit methods (diffusion)
 void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                float c) {
-    // TODO:
-    uint_fast32_t fast_cycles = O << 2;
+    // TODO: Meter o calculo do r e do x[index] paralelo
+    uint_fast32_t fast_cycles = O << 3;
     for (int l = 0; l < LINEARSOLVERTIMES; l++) {
         for (int k = 1; k <= M; k++) {
             for (int j = 1; j <= N; j++) {
+                uint_fast32_t index = IX(1, j, k);
                 for (int i = 1; i <= O; i++) {
-                    uint_fast32_t index = IX(i, j, k);
                     float r =
                         (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
                          x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
                          x[index + (M + 2) * (M + 2)]);
 
                     x[index] = x0[index] + a / c * r;
+                    ++index;
                 }
             }
         }
