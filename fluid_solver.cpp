@@ -25,7 +25,6 @@ void add_source(int M, int N, int O, float *x, float *s, float dt) {
 
 // Dei inline a esta funcao pq estamos a dar 13400 calls no ciclo da lin_solve e
 // a encher a stack de lixo
-
 // Set boundary conditions
 inline void set_bnd(int M, int N, int O, int b, float *x) {
     int i, j;
@@ -63,22 +62,24 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
                                       x[IX(M + 1, N + 1, 1)]);
 }
 
+inline float lin_solve_helper(int M, int N, uint_fast32_t index, float *x) {
+    return (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
+            x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
+            x[index + (M + 2) * (M + 2)]);
+}
+
 // Linear solve for implicit methods (diffusion)
 void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                float c) {
     // TODO:
+    uint_fast32_t fast_cycles = O << 2;
     for (int l = 0; l < LINEARSOLVERTIMES; l++) {
         for (int k = 1; k <= M; k++) {
             for (int j = 1; j <= N; j++) {
                 for (int i = 1; i <= O; i++) {
                     uint_fast32_t index = IX(i, j, k);
                     x[index] =
-                        x0[index] +
-                        a *
-                            (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
-                             x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
-                             x[index + (M + 2) * (M + 2)]) /
-                            c;
+                        x0[index] + a * lin_solve_helper(M, N, index, x) / c;
                 }
             }
         }
