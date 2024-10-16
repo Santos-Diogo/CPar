@@ -1,6 +1,7 @@
 #include "fluid_solver.h"
 
 #include <cmath>
+#include <cstdint>
 
 #define IX(i, j, k) ((i) + (M + 2) * (j) + (M + 2) * (N + 2) * (k))
 // TODO: swap com XOR e melhor
@@ -67,12 +68,13 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
         for (int k = 1; k <= M; k++) {
             for (int j = 1; j <= N; j++) {
                 for (int i = 1; i <= O; i++) {
-                    x[IX(i, j, k)] =
-                        x0[IX(i, j, k)] +
+                    uint_fast32_t index = IX(i, j, k);
+                    x[index] =
+                        x0[index] +
                         a *
-                            (x[IX(i - 1, j, k)] + x[IX(i + 1, j, k)] +
-                             x[IX(i, j - 1, k)] + x[IX(i, j + 1, k)] +
-                             x[IX(i, j, k - 1)] + x[IX(i, j, k + 1)]) /
+                            (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
+                             x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
+                             x[index + (M + 2) * (M + 2)]) /
                             c;
                 }
             }
