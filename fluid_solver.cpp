@@ -73,7 +73,6 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
             for (int j = 1; j <= N; j++) {
                 for (int i = 1; i <= O; i++) {
                     uint_fast32_t index = IX(i, j, k);
-
                     float r =
                         (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
                          x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +

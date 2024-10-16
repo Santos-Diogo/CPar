@@ -19,6 +19,7 @@ test: all
 	@echo Running Tests...
 	@$(BIN) < $(INPUT_FILE)
 	@gprof $(BIN) gmon.out > $(RESULTS_DIR)/analysis.txt
+	@sleep 1
 	@less $(RESULTS_DIR)/analysis.txt
 
 clean:
