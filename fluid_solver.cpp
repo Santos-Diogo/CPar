@@ -78,7 +78,7 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                          x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
                          x[index + (M + 2) * (M + 2)]);
 
-                    x[index] = x0[index] + a * r / c;
+                    x[index] = x0[index] + a / c * r;
                 }
             }
         }
