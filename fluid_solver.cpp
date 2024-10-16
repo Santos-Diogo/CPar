@@ -62,11 +62,6 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
                                       x[IX(M + 1, N + 1, 1)]);
 }
 
-inline float lin_solve_helper(int M, int N, uint_fast32_t index, float *x) {
-    return (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
-            x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
-            x[index + (M + 2) * (M + 2)]);
-}
 
 // Linear solve for implicit methods (diffusion)
 void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
@@ -79,7 +74,12 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                 for (int i = 1; i <= O; i++) {
                     uint_fast32_t index = IX(i, j, k);
                     x[index] =
-                        x0[index] + a * lin_solve_helper(M, N, index, x) / c;
+                        x0[index] +
+                        a *
+                            (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
+                             x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
+                             x[index + (M + 2) * (M + 2)]) /
+                            c;
                 }
             }
         }
