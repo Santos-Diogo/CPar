@@ -3,7 +3,6 @@
 #include <immintrin.h>
 
 #include <cmath>
-#include <cstdint>
 
 #define IX(i, j, k) ((i) + (M + 2) * (j) + (M + 2) * (N + 2) * (k))
 // TODO: swap com XOR e melhor
@@ -35,20 +34,20 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
     // mesmo ciclo
 
     // Set boundary on faces
-    for (i = 1; i <= M; i++) {
-        for (j = 1; j <= N; j++) {
+    for (j = 1; j <= M; j++) {
+        for (i = 1; i <= N; i++) {
             x[IX(i, j, 0)] = b == 3 ? -x[IX(i, j, 1)] : x[IX(i, j, 1)];
             x[IX(i, j, O + 1)] = b == 3 ? -x[IX(i, j, O)] : x[IX(i, j, O)];
         }
     }
-    for (i = 1; i <= N; i++) {
-        for (j = 1; j <= O; j++) {
+    for (j = 1; j <= N; j++) {
+        for (i = 1; i <= O; i++) {
             x[IX(0, i, j)] = b == 1 ? -x[IX(1, i, j)] : x[IX(1, i, j)];
             x[IX(M + 1, i, j)] = b == 1 ? -x[IX(M, i, j)] : x[IX(M, i, j)];
         }
     }
-    for (i = 1; i <= M; i++) {
-        for (j = 1; j <= O; j++) {
+    for (j = 1; j <= M; j++) {
+        for (i = 1; i <= O; i++) {
             x[IX(i, 0, j)] = b == 2 ? -x[IX(i, 1, j)] : x[IX(i, 1, j)];
             x[IX(i, N + 1, j)] = b == 2 ? -x[IX(i, N, j)] : x[IX(i, N, j)];
         }
@@ -136,8 +135,8 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
 
 
 // Diffusion step (uses implicit method)
-void diffuse(int M, int N, int O, int b, float *x, float *x0, float diff,
-             float dt) {
+inline void diffuse(int M, int N, int O, int b, float *x, float *x0, float diff,
+                    float dt) {
     int max = MAX(MAX(M, N), O);
     float a = dt * diff * max * max;
     lin_solve(M, N, O, b, x, x0, a, 1 + 6 * a);
