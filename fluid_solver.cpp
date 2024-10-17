@@ -138,28 +138,33 @@ inline void diffuse(int M, int N, int O, int b, float *x, float *x0, float diff,
     lin_solve(M, N, O, b, x, x0, a, 1 + 6 * a);
 }
 
+// TODO: Facil vetorizar
 // Advection step (uses velocity field to move quantities)
 void advect(int M, int N, int O, int b, float *d, float *d0, float *u, float *v,
             float *w, float dt) {
     float dtX = dt * M, dtY = dt * N, dtZ = dt * O;
 
-    for (int i = 1; i <= M; i++) {
+    for (int k = 1; k <= M; k++) {
         for (int j = 1; j <= N; j++) {
-            for (int k = 1; k <= O; k++) {
+            for (int i = 1; i <= O; i++) {
                 float x = i - dtX * u[IX(i, j, k)];
                 float y = j - dtY * v[IX(i, j, k)];
                 float z = k - dtZ * w[IX(i, j, k)];
 
                 // Clamp to grid boundaries
 
-                // TODO: Condicoes relativas a mesma variavel mutuamente
-                // exclusivas utilizar else if
-                if (x < 0.5f) x = 0.5f;
-                if (x > M + 0.5f) x = M + 0.5f;
-                if (y < 0.5f) y = 0.5f;
-                if (y > N + 0.5f) y = N + 0.5f;
-                if (z < 0.5f) z = 0.5f;
-                if (z > O + 0.5f) z = O + 0.5f;
+                if (x < 0.5f)
+                    x = 0.5f;
+                else if (x > M + 0.5f)
+                    x = M + 0.5f;
+                if (y < 0.5f)
+                    y = 0.5f;
+                else if (y > N + 0.5f)
+                    y = N + 0.5f;
+                if (z < 0.5f)
+                    z = 0.5f;
+                else if (z > O + 0.5f)
+                    z = O + 0.5f;
 
                 int i0 = (int)x, i1 = i0 + 1;
                 int j0 = (int)y, j1 = j0 + 1;
@@ -188,9 +193,9 @@ void advect(int M, int N, int O, int b, float *d, float *d0, float *u, float *v,
 // divergence-free)
 void project(int M, int N, int O, float *u, float *v, float *w, float *p,
              float *div) {
-    for (int i = 1; i <= M; i++) {
+    for (int k = 1; k <= M; k++) {
         for (int j = 1; j <= N; j++) {
-            for (int k = 1; k <= O; k++) {
+            for (int i = 1; i <= O; i++) {
                 div[IX(i, j, k)] = -0.5f *
                                    (u[IX(i + 1, j, k)] - u[IX(i - 1, j, k)] +
                                     v[IX(i, j + 1, k)] - v[IX(i, j - 1, k)] +
@@ -206,9 +211,9 @@ void project(int M, int N, int O, float *u, float *v, float *w, float *p,
     lin_solve(M, N, O, 0, p, div, 1, 6);
 
     // TODO:SIMD
-    for (int i = 1; i <= M; i++) {
+    for (int k = 1; k <= M; k++) {
         for (int j = 1; j <= N; j++) {
-            for (int k = 1; k <= O; k++) {
+            for (int i = 1; i <= O; i++) {
                 u[IX(i, j, k)] -=
                     0.5f * (p[IX(i + 1, j, k)] - p[IX(i - 1, j, k)]);
                 v[IX(i, j, k)] -=

@@ -1,4 +1,4 @@
-CPP = g++ -Wall -pg -Ofast -mavx
+CPP = g++ -Wall -pg -Ofast -mtune=native -march=native -ftree-vectorize -funroll-loops -floop-interchange -fpeel-loops -funswitch-loops
 SRCS = main.cpp fluid_solver.cpp EventManager.cpp
 BIN_DIR = ./bin
 RESULTS_DIR = ./testResults
