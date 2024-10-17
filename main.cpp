@@ -1,5 +1,6 @@
 #include <mm_malloc.h>
 
+#include <cstring>
 #include <iostream>
 #include <vector>
 
@@ -46,12 +47,14 @@ int allocate_data() {
 // Function to clear the data (set all to zero)
 void clear_data() {
     int size = (M + 2) * (N + 2) * (O + 2);
-    for (int i = 0; i < size; i++) {
-        // TODO: ???????????
-        // memset nos arrays todos
-        u[i] = v[i] = w[i] = u_prev[i] = v_prev[i] = w_prev[i] = dens[i] =
-            dens_prev[i] = 0.0f;
-    }
+    memset(u, 0, size);
+    memset(v, 0, size);
+    memset(w, 0, size);
+    memset(u_prev, 0, size);
+    memset(v_prev, 0, size);
+    memset(w_prev, 0, size);
+    memset(dens, 0, size);
+    memset(dens_prev, 0, size);
 }
 
 // Free allocated memory
