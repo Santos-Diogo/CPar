@@ -69,9 +69,6 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
     const __m256 a_vec = _mm256_set1_ps(a);
     const __m256 c_vec = _mm256_set1_ps(c);
 
-    // TODO: Garantir que os fat_cycles utilizam enderecos de memoria alinhados.
-    // A natureza dos acessos especificos ao problema escangalha o alinhamento
-    // que e feito ao alocar os arrays.
     for (int l = 0; l < LINEARSOLVERTIMES; l++) {
         for (int k = 1; k <= M; k++) {
             for (int j = 1; j <= N; j++) {

@@ -25,7 +25,6 @@ static float *dens, *dens_prev;
 
 // Function to allocate simulation data
 int allocate_data() {
-    // TODO: Este size ]e calculado em N sitios diferentes. Pode bem ser global
     int size = (M + 2) * (N + 2) * (O + 2);
     u = (float *)_mm_malloc(size * sizeof(float), 32);
     v = (float *)_mm_malloc(size * sizeof(float), 32);
@@ -71,19 +70,17 @@ void free_data() {
 
 // Apply events (source or force) for the current timestep
 void apply_events(const std::vector<Event> &events) {
-    // TODO: IX(i, j, k) calculado sempre, pode estar fora do if e numa var.
-    // i, j, k constantes... estamos a calcula-los todos os ciclos.
+    int index = IX(M / 2, N / 2, O / 2);
+
     for (const auto &event : events) {
         if (event.type == ADD_SOURCE) {
             // Apply density source at the center of the grid
-            int i = M / 2, j = N / 2, k = O / 2;
-            dens[IX(i, j, k)] = event.density;
+            dens[index] = event.density;
         } else if (event.type == APPLY_FORCE) {
             // Apply forces based on the event's vector (fx, fy, fz)
-            int i = M / 2, j = N / 2, k = O / 2;
-            u[IX(i, j, k)] = event.force.x;
-            v[IX(i, j, k)] = event.force.y;
-            w[IX(i, j, k)] = event.force.z;
+            u[index] = event.force.x;
+            v[index] = event.force.y;
+            w[index] = event.force.z;
         }
     }
 }
@@ -92,7 +89,6 @@ void apply_events(const std::vector<Event> &events) {
 float sum_density() {
     float total_density = 0.0f;
     int size = (M + 2) * (N + 2) * (O + 2);
-    // TODO: SIMD
     for (int i = 0; i < size; i++) {
         total_density += dens[i];
     }
