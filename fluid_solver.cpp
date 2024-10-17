@@ -69,14 +69,20 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
 void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                float c) {
     const int fat_cycles = O >> 3;
+    const int m2 = M + 2;
+    const int m2_n2 = m2 * (N + 2);
     const __m256 a_vec = _mm256_set1_ps(a);
     const __m256 c_vec = _mm256_set1_ps(c);
 
+    // TODO: Garantir que os fat_cycles utilizam enderecos de memoria alinhados.
+    // A natureza dos acessos especificos ao problema escangalha o alinhamento
+    // que e feito ao alocar os arrays.
     for (int l = 0; l < LINEARSOLVERTIMES; l++) {
         for (int k = 1; k <= M; k++) {
             for (int j = 1; j <= N; j++) {
                 int index = IX(1, j, k);
-                for (int i = 0; i < fat_cycles; i++) {
+                int i = 0;
+                for (; i < fat_cycles; i++) {
                     __m256 sum, other;
                     int off_index;
 
@@ -87,19 +93,19 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                     other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
-                    off_index = index - (M + 2);
+                    off_index = index - m2;
                     other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
-                    off_index = index + (M + 2);
+                    off_index = index + m2;
                     other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
-                    off_index = index - (M + 2) * (N + 2);
+                    off_index = index - m2_n2;
                     other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
-                    off_index = index + (M + 2) * (N + 2);
+                    off_index = index + m2_n2;
                     other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
@@ -114,7 +120,7 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
 
                     index += 8;
                 }
-                for (int i = index; i <= O; i++) {
+                for (i <<= 3; i <= O; i++) {
                     float r =
                         (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
                          x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
