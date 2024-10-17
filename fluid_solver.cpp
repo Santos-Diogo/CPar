@@ -5,7 +5,6 @@
 #include <cmath>
 
 #define IX(i, j, k) ((i) + (M + 2) * (j) + (M + 2) * (N + 2) * (k))
-// TODO: swap com XOR e melhor
 #define SWAP(x0, x)      \
     {                    \
         float *tmp = x0; \
@@ -18,7 +17,6 @@
 // Add sources (density or velocity)
 void add_source(int M, int N, int O, float *x, float *s, float dt) {
     int size = (M + 2) * (N + 2) * (O + 2);
-    // TODO: Vetorizar isto, iterar com SIMD e "arredondar" no final
     for (int i = 0; i < size; i++) {
         x[i] += dt * s[i];
     }
@@ -30,8 +28,6 @@ void add_source(int M, int N, int O, float *x, float *s, float dt) {
 inline void set_bnd(int M, int N, int O, int b, float *x) {
     int i, j;
 
-    // TODO: Ver se existe dependencia de dados e se e possivel combinar tudo no
-    // mesmo ciclo
 
     // Set boundary on faces
     for (j = 1; j <= M; j++) {
