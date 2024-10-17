@@ -1,4 +1,4 @@
-CPP = g++ -Wall -pg -g -mavx
+CPP = g++ -Wall -pg -O2 -mavx
 SRCS = main.cpp fluid_solver.cpp EventManager.cpp
 BIN_DIR = ./bin
 RESULTS_DIR = ./testResults
