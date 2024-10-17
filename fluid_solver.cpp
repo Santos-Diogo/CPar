@@ -68,9 +68,9 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
 // Linear solve for implicit methods (diffusion)
 void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                float c) {
-    // TODO: Meter o calculo do r e do x[index] paralelo
     const int fat_cycles = O >> 3;
-    const float a_div_c = a / c;
+    const __m256 a_vec = _mm256_set1_ps(a);
+    const __m256 c_vec = _mm256_set1_ps(c);
 
     for (int l = 0; l < LINEARSOLVERTIMES; l++) {
         for (int k = 1; k <= M; k++) {
@@ -81,70 +81,45 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
                     int off_index;
 
                     off_index = index - 1;
-                    sum = _mm256_set_ps(x[off_index], x[off_index + 1],
-                                        x[off_index + 2], x[off_index + 3],
-                                        x[off_index + 4], x[off_index + 5],
-                                        x[off_index + 6], x[off_index + 7]);
+                    sum = _mm256_loadu_ps(&x[off_index]);
 
                     off_index = index + 1;
-                    other = _mm256_set_ps(x[off_index], x[off_index + 1],
-                                          x[off_index + 2], x[off_index + 3],
-                                          x[off_index + 4], x[off_index + 5],
-                                          x[off_index + 6], x[off_index + 7]);
+                    other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
                     off_index = index - (M + 2);
-                    other = _mm256_set_ps(x[off_index], x[off_index + 1],
-                                          x[off_index + 2], x[off_index + 3],
-                                          x[off_index + 4], x[off_index + 5],
-                                          x[off_index + 6], x[off_index + 7]);
+                    other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
                     off_index = index + (M + 2);
-                    other = _mm256_set_ps(x[off_index], x[off_index + 1],
-                                          x[off_index + 2], x[off_index + 3],
-                                          x[off_index + 4], x[off_index + 5],
-                                          x[off_index + 6], x[off_index + 7]);
+                    other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
                     off_index = index - (M + 2) * (N + 2);
-                    other = _mm256_set_ps(x[off_index], x[off_index + 1],
-                                          x[off_index + 2], x[off_index + 3],
-                                          x[off_index + 4], x[off_index + 5],
-                                          x[off_index + 6], x[off_index + 7]);
+                    other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
                     off_index = index + (M + 2) * (N + 2);
-                    other = _mm256_set_ps(x[off_index], x[off_index + 1],
-                                          x[off_index + 2], x[off_index + 3],
-                                          x[off_index + 4], x[off_index + 5],
-                                          x[off_index + 6], x[off_index + 7]);
+                    other = _mm256_loadu_ps(&x[off_index]);
                     sum = _mm256_add_ps(sum, other);
 
-                    other = _mm256_set_ps(a_div_c, a_div_c, a_div_c, a_div_c,
-                                          a_div_c, a_div_c, a_div_c, a_div_c);
+                    sum = _mm256_mul_ps(sum, a_vec);
 
-                    sum = _mm256_mul_ps(sum, other);
-
-                    other = _mm256_set_ps(x0[index], x0[index + 1],
-                                          x0[index + 2], x0[index + 3],
-                                          x0[index + 4], x0[index + 5],
-                                          x0[index + 6], x0[index + 7]);
-
-                    // x0[index]+ a/ c* r para 8 elems
+                    other = _mm256_loadu_ps(&x0[index]);
                     sum = _mm256_add_ps(sum, other);
 
-                    _mm256_store_ps(&x[index], sum);
+                    sum = _mm256_div_ps(sum, c_vec);
+
+                    _mm256_storeu_ps(&x[index], sum);
 
                     index += 8;
                 }
-                for (int i = index; i < O; i++) {
+                for (int i = index; i <= O; i++) {
                     float r =
                         (x[index - 1] + x[index + 1] + x[index - (M + 2)] +
                          x[index + (M + 2)] + x[index - (M + 2) * (N + 2)] +
-                         x[index + (M + 2) * (M + 2)]);
-
-                    x[index] = x0[index] + a / c * r;
+                         x[index + (M + 2) * (N + 2)]);
+                    x[index] = (x0[index] + (a * r)) / c;
                     ++index;
                 }
             }
