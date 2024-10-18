@@ -15,7 +15,8 @@
 #define LINEARSOLVERTIMES 20
 
 // Add sources (density or velocity)
-void add_source(int M, int N, int O, float *x, float *s, float dt) {
+void add_source(const int M, const int N, const int O, float *x, const float *s,
+                const float dt) {
     int size = (M + 2) * (N + 2) * (O + 2);
     for (int i = 0; i < size; i++) {
         x[i] += dt * s[i];
@@ -25,7 +26,8 @@ void add_source(int M, int N, int O, float *x, float *s, float dt) {
 // Dei inline a esta funcao pq estamos a dar 13400 calls no ciclo da lin_solve e
 // a encher a stack de lixo
 // Set boundary conditions
-inline void set_bnd(int M, int N, int O, int b, float *x) {
+inline void set_bnd(const int M, const int N, const int O, const int b,
+                    float *x) {
     int i, j;
 
 
@@ -61,8 +63,8 @@ inline void set_bnd(int M, int N, int O, int b, float *x) {
 
 
 // Linear solve for implicit methods (diffusion)
-void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
-               float c) {
+void lin_solve(const int M, const int N, const int O, const int b, float *x,
+               const float *x0, const float a, const float c) {
     const int fat_cycles = O >> 3;
     const int m2 = M + 2;
     const int m2_n2 = m2 * (N + 2);
@@ -128,25 +130,27 @@ void lin_solve(int M, int N, int O, int b, float *x, float *x0, float a,
 
 
 // Diffusion step (uses implicit method)
-inline void diffuse(int M, int N, int O, int b, float *x, float *x0, float diff,
-                    float dt) {
-    int max = MAX(MAX(M, N), O);
-    float a = dt * diff * max * max;
+inline void diffuse(const int M, const int N, const int O, const int b,
+                    float *x, float *x0, const float diff, const float dt) {
+    const int max = MAX(MAX(M, N), O);
+    const float a = dt * diff * max * max;
     lin_solve(M, N, O, b, x, x0, a, 1 + 6 * a);
 }
 
 // TODO: Facil vetorizar
 // Advection step (uses velocity field to move quantities)
-void advect(int M, int N, int O, int b, float *d, float *d0, float *u, float *v,
-            float *w, float dt) {
-    float dtX = dt * M, dtY = dt * N, dtZ = dt * O;
+void advect(const int M, const int N, const int O, const int b, float *d,
+            const float *d0, const float *u, const float *v, const float *w,
+            const float dt) {
+    const float dtX = dt * M, dtY = dt * N, dtZ = dt * O;
 
     for (int k = 1; k <= M; k++) {
         for (int j = 1; j <= N; j++) {
+            int index = IX(1, j, k);
             for (int i = 1; i <= O; i++) {
-                float x = i - dtX * u[IX(i, j, k)];
-                float y = j - dtY * v[IX(i, j, k)];
-                float z = k - dtZ * w[IX(i, j, k)];
+                float x = i - dtX * u[index];
+                float y = j - dtY * v[index];
+                float z = k - dtZ * w[index];
 
                 // Clamp to grid boundaries
 
@@ -172,14 +176,15 @@ void advect(int M, int N, int O, int b, float *d, float *d0, float *u, float *v,
                 float u1 = z - k0, u0 = 1 - u1;
 
                 // TODO: SIMD
-                d[IX(i, j, k)] = s0 * (t0 * (u0 * d0[IX(i0, j0, k0)] +
-                                             u1 * d0[IX(i0, j0, k1)]) +
-                                       t1 * (u0 * d0[IX(i0, j1, k0)] +
-                                             u1 * d0[IX(i0, j1, k1)])) +
-                                 s1 * (t0 * (u0 * d0[IX(i1, j0, k0)] +
-                                             u1 * d0[IX(i1, j0, k1)]) +
-                                       t1 * (u0 * d0[IX(i1, j1, k0)] +
-                                             u1 * d0[IX(i1, j1, k1)]));
+                d[index] = s0 * (t0 * (u0 * d0[IX(i0, j0, k0)] +
+                                       u1 * d0[IX(i0, j0, k1)]) +
+                                 t1 * (u0 * d0[IX(i0, j1, k0)] +
+                                       u1 * d0[IX(i0, j1, k1)])) +
+                           s1 * (t0 * (u0 * d0[IX(i1, j0, k0)] +
+                                       u1 * d0[IX(i1, j0, k1)]) +
+                                 t1 * (u0 * d0[IX(i1, j1, k0)] +
+                                       u1 * d0[IX(i1, j1, k1)]));
+                index++;
             }
         }
     }
@@ -188,8 +193,8 @@ void advect(int M, int N, int O, int b, float *d, float *d0, float *u, float *v,
 
 // Projection step to ensure incompressibility (make the velocity field
 // divergence-free)
-void project(int M, int N, int O, float *u, float *v, float *w, float *p,
-             float *div) {
+void project(const int M, const int N, const int O, float *u, float *v,
+             float *w, float *p, float *div) {
     for (int k = 1; k <= M; k++) {
         for (int j = 1; j <= N; j++) {
             for (int i = 1; i <= O; i++) {
@@ -226,8 +231,8 @@ void project(int M, int N, int O, float *u, float *v, float *w, float *p,
 }
 
 // Step function for density
-void dens_step(int M, int N, int O, float *x, float *x0, float *u, float *v,
-               float *w, float diff, float dt) {
+void dens_step(const int M, const int N, const int O, float *x, float *x0,
+               float *u, float *v, float *w, const float diff, const float dt) {
     add_source(M, N, O, x, x0, dt);
     SWAP(x0, x);
     diffuse(M, N, O, 0, x, x0, diff, dt);
@@ -236,8 +241,9 @@ void dens_step(int M, int N, int O, float *x, float *x0, float *u, float *v,
 }
 
 // Step function for velocity
-void vel_step(int M, int N, int O, float *u, float *v, float *w, float *u0,
-              float *v0, float *w0, float visc, float dt) {
+void vel_step(const int M, const int N, const int O, float *u, float *v,
+              float *w, float *u0, float *v0, float *w0, const float visc,
+              const float dt) {
     add_source(M, N, O, u, u0, dt);
     add_source(M, N, O, v, v0, dt);
     add_source(M, N, O, w, w0, dt);
